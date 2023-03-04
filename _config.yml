@@ -21,8 +21,7 @@
 title: Bowen's Whitespace
 email: bowenwu741@gmail.com
 description: >- # this means to ignore newlines until "baseurl:"
-  Heyo, I'm Bowen, a programmer, techartist, and 2D/3D artist. 
-  Welcome to my little website.
+  I've been here for as long as I can remember.
 domain: "19829984.github.io"
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "https://19829984.github.io/" # the base hostname & protocol for your site, e.g. http://example.com
@@ -31,8 +30,6 @@ github_username: "19829984"
 
 # Build settings
 theme: minima
-plugins:
-  - jekyll-feed
 
 # Exclude from processing.
 # The following items will not be processed, by default.
@@ -53,3 +50,5 @@ plugins:
 #   - vendor/cache/
 #   - vendor/gems/
 #   - vendor/ruby/
+exclude:
+  - 19829984.github.io.code-workspace
