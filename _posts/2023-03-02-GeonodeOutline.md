@@ -55,7 +55,8 @@ So that was a mouthful of words, which probably wasn't too helpful to many peopl
 ![Process Demo](/assets/images/process_demo.gif)
 1. The first transform is projecting the normals to be parallel to the camera's near/far plane.
 2. Then we scale the vectors such that they're the same size in screen space. 
-3. We re-project the vectors back onto the original normal vectors while maintaining their screen space size. This is to avoid artifacts from the shell clipping with the original model.  
+3. We re-project the vectors back onto the original normal vectors while maintaining their screen space size. This is to avoid artifacts from the shell clipping with the original model. 
+    
 From the camera's point of view, the last step doesn't look like the vectors have changed direction or length at all, which is what we want. 
 ![Process Demo from Cam](/assets/images/process_demo_from_cam.gif)
 <center><h5><i> The vector arrows still changes slightly due to them moving towards/away from the perspective camera in 3D space still </i></h5></center>
