@@ -44,7 +44,10 @@ With **Geometry Nodes**, rather than only being able to extrude the invert hull 
 
 ![Fixed Extreme Angle Example](/assets/images/advanced_extreme_example_.png)
 <center><h5><i> Now the entire model's outline is much more uniform, with the buttons looking much better too </i></h5></center>
-
+<center>
+<img src="/assets/images/outline_demo_gif.gif" width="800">
+<h5><i> Realtime Demo </i></h5>
+</center>
 ![Geonode Overview](/assets/images/geonode_demo_gif.gif)
 <center><h5><i> The outline of every mesh can be controled by changing the property of a single Geometry Node graph </i></h5></center>
 
