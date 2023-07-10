@@ -1,18 +1,28 @@
 ---
 layout: post
-title:  "Geometry Node Screen-space Invert Hull Outlines"
-date:   2023-03-02 08:50:00 -0500
+title:  "[3.6 UPDATE] Geometry Node Screen-space Invert Hull Outlines"
+date:   2023-07-10 00:30:00 -0500
 categories: Tech_Art
 ---
-#### **UPDATE**
-With Blender 3.6, there're improvements to drivers, which makes this system a lot easier to setup and work with. The update can be found [**here**](/tech_art/2023/07/10/GeonodeOutline3.6.html), and is better written.
 
 #### Table of Contents
-
+- [Blender 3.6 Update](#blender_3.6)
 - [Preface](#preface)
 - [Simple Invert Hull in Blender](#simple_invert_hull_blender)
 - [Geometry Node Based Invert Hull](#geonode_invert_hull)
 - [Implementation Time!](#implementation_time)
+  - [Project Normals to Camera Plane](#step_1)
+  - [Scale Projected Normal Vectors in Screen Space](#step_2)
+  - [Re-Project Back to Original Normal Vectors](#step_3)
+  - [Final Steps](#step_4)
+
+
+## Blender 3.6 Update {#blender_3.6}
+In the [old version](/tech_art/2023/03/02/GeonodeOutline.html) of this post, you'd need to re-setup the drivers whenever you want to use it in a new file simply due to Blender's limitations with it comes to linked libraries and drivers. 
+
+However, with Blender's 3.6 update, Drivers now can use conteext properties, which allows a driver to implicitly  reference the active scene or view layer. This allows us to set up these drivers once in the character file that's using our outline nodes, and reuse them via library links without additional setup.
+
+This update makes the geometry nodes easier to setup. Since I've also made a couple of minor changes since I wrote the old version, I'll also include them here. **For changed content**, skip to [implementation time](#implementation_time)
 
 ## **Preface** {#preface}
 In stylized realtime rendering, one way to achieve outlines is the ***Invert Hull*** method; the mesh is duplicated, each vertex offset along the normal, and is rendered via a back-face-only material with a solid color. You can see this employed by Arc System Works in their 3D anime fighting games such as the recent installments of the Guilty Gear series.
@@ -55,7 +65,7 @@ With **Geometry Nodes**, rather than only being able to extrude the invert hull 
 <center><h5><i> The outline of every mesh can be controled by changing the property of a single Geometry Node graph </i></h5></center>
 
 ### The basic principle
-So the idea is to take our vertex normal vector, project it such that it is parallel to the near-plane/far-palne of the camera, then scale it by a factor that is will be the length that we want it to be in screen space, and finally projecting it back to the original normal vector while preserving its screen space length. 
+So the idea is to take our vertex normal vector, project it such that it is parallel to the near-plane/far-palne of the camera, then scale it by a factor that is will be the length that we want it to be in screen space, and finally projecting it back to the original normal vector while preserving its screen space length. We then create the inverse hull mesh using these new vectors, rather than just the normal vectors in the traditional method.
 
 So that was a mouthful of words, which probably wasn't too helpful to many people. So here's a more visual demonstration, where the arrows represent the normals.
 ![Process Demo](/assets/geonode_outline/gifs/process_demo.gif)
@@ -69,44 +79,60 @@ From the camera's point of view, the last step doesn't look like the vectors hav
 
 ## **Implementation Time!** {#implementation_time}
 
-### 1. Project Normals to Camera Plane
-The node graph looks like this
-![Normal Projection Geo Nodes](/assets/geonode_outline/images/1_normal_proj_overview.png)
+### 1. Project Normals to Camera Plane {#step_1}
+First we need to retrieve data about the active camera with the following node setup to obtain the active camera's world space location, XYZ euler rotation, as well as vectors.
+![Active Camera Data Node Setup](/assets/geonode_outline/images/1_active_camera_data_node.png)
+<center><h5><i> We make use of context properties obtain the active camera's world space location and rotation. </i></h5></center>
+
+With that node group ready to go, we can now take the normal vectors of our mesh and project them to be parallel to the near/far plane of the camera.
+![Normal Projection Geo Nodes](/assets/geonode_outline/images/1_normal_proj_overview_3.6.png)
 <center><h5><i> Calculate Camera view vector from (0,0,-1); the default camera orientation, then project normals to camera plane. </i></h5></center>
 
-### 2. Scale Projected Normal Vectors in Screen Space
+### 2. Scale Projected Normal Vectors in Screen Space {#step_2}
 **2a.** First we calculate the **world space length** of X pixels in screen space at each vertex. Specifying pixel count works, but when render resolution changes so does the outline size, so I added a screen-space ratio option to preserve outline sizes regardless of the resolution. 
 
-![Calculate World Space Distance Per Pixel](/assets/geonode_outline/images/2a_pixel_dist_geo_node.png)
+![Calculate World Space Distance Per Pixel](/assets/geonode_outline/images/2a_pixel_dist_geo_node_3.6.png)
 
-**2b.** To make the Outlines dynamically respond to changing camera parameters, we pass in the *focal length* and *dimensions* through **drivers**.
+**2b.** To make the Outlines dynamically respond to changing camera parameters, we pass in the *focal length* and *dimensions* through **drivers** using context properties.
 
 <center>
-<img src="/assets/geonode_outline/images/focal_length_driver.png" width="200"> <img src="/assets/geonode_outline/images/resolution_driver.png" width="240"></center>
+<img src="/assets/geonode_outline/images/focal_length_driver_3.6.png" height="300"> <img src="/assets/geonode_outline/images/resolution_driver_3.6.png" height="300"><img src="/assets/geonode_outline/images/driver_connection.png" height="300"></center>
 
-**2c.** Attenuate and multiply with step 1
+**2c.** Attenuate and multiply with step 1. Attenuation with `Outline Scaling Power` allows us to make the outline scaling behave nonlinearly.
 
 ![Attenuation and G Vector](/assets/geonode_outline/images/2c_attenuation.png)
 
-### 3. Re-project back to Normal Vector
-**3a.**
-![Re-projection](/assets/geonode_outline/images/3_reprojection.png)
+### 3. Re-Project Back to Original Normal Vectors {#step_3}
+Because we've projected our normal vectors to be parallel to the near/far plane, when they are used to create the inverse hull, the hull may often clip the original mesh, causing artifacts. Therefore, we must reproject our vectors back to the normal vector, while preserving their screenspace size.
+![Re-projection](/assets/geonode_outline/images/3_reprojection_3.6.png)
 <center><h5><i> Check out <a href="https://vixra.org/pdf/1712.0524v1.pdf">this PDF</a> for an explanation on projecting a vector onto a plane from any angle </i></h5></center>
 ![Re-projection_2](/assets/geonode_outline/images/3_vector_projection_group.png)
 <center><h5><i> Inside of the VectorProjection vector group </i></h5></center>
 
-### 4. Putting it all together
-**4a.** We may see weird artifacts when the normal vector is close to being parallel to the vector from the camera to the vertex, because the normal vector needs to be scaled more after step 2 to be parallel to the original normal vector. So we must attenuate these vectors. We can do so via the absolute value of the dot product.
+### 4. Final Steps {#step_4}
+**4a.** We may see weird artifacts when the reprojected vector is close to being parallel to the vector from the camera to the vertex, because the reprojected vector needs to be scaled to a large degree after step 2 to be parallel to the original normal vector. So we must attenuate these vectors. Luckly for us, where these vectors occur also happens to be there the inverse hull is not visible, so we can simply scale them down. 
 
-![Culling](/assets/geonode_outline/images/4_culling.png)
-<center><h5><i> Mix node's input A and Dot Product's input B is the g Vector, and B is the s Vector from 3 </i></h5></center>
+We can do so by:
+1. Use the dot product of the g Vector and original Normal vectors to determine which vectors we need to cull. The more parallel they are, 
+2. We do not care about direction, only parallel-ness, so we use the absolute value. This also makes the range of the values to be [0-1]
+3. We then invert the values, this makes it such that the closer a vector is to being parallel with the r vector, the closer it is to 0.
+4. Then use power and mix to attenuate, and finally scale our reprojected vector with it. 
+
+![Culling](/assets/geonode_outline/images/4_culling_3.6.png)
+<center><h5><i> Dot Product's input B is the g Vector, and B is the s Vector from 3 </i></h5></center>
 
 **4b.** We want to provide options for using and world space constant outlines and blending between that and screen space outlines, so we add the following nodes.
-![World Space Outline Option](/assets/geonode_outline/images/4_world_space_outline.png)
+![World Space Outline Option](/assets/geonode_outline/images/4_world_space_outline_3.6.png)
 **4c.** We make use of vertex weights to allow further user attenuation of the outlines. Also, the re-projection may cause some vectors to point inside of the mesh instead of out, do we perform a dot product check and invert the vectors. This still preserves the screen space size of our outlines.
-![Weight and inversion Check](/assets/geonode_outline/images/4_weight_inversion_check.png)
+![Weight and inversion Check](/assets/geonode_outline/images/4_weight_inversion_check_3.6.png)
 **4d.** Extruding our invert hull then just involves giving each vertex the offset that we calculated, flipping its normals, and setting an outline material.
 ![Done!](/assets/geonode_outline/images/4_finish.png)
 
+**4e.** Now all you need to do is to grab the weight attribute and connect it to the input of our node group, and link up all other inputs to the inputs of the outermost group.
+![Overview](/assets/geonode_outline/images/4_finish_overview.png)
+<center><h5><i> 2 nodes in between to default the weights to 1 if the attribute does not exist </i></h5></center>
+
 ### Done!
-And done! Now you have a geometry node that takes a geometry, camera, and material, and outputs invert hull outlines in screen space, with a variety of adjustment options. If you want to control multiple mesh objects with this, nest it inside 2 layers of nodes, and use the top layer as the geometry node object for the modifier.
+And done! Now you have a geometry node group that takes a geometry and material, and outputs invert hull outlines in screen space, with a variety of adjustment options, and can be readily linked to other files and use. 
+
+If you want to control the inverse hull of multiple mesh objects at once with this, nest it inside another layers of nodes, and use the top layer as the geometry node object for the modifiers of all desired objects.
