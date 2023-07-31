@@ -106,7 +106,7 @@ First we calculate the orthogonal distance from our camera to a viewplane that h
 
 **2c.** What is mathematically correct isn't necessarily what we want. Often, you'd want objects far away to have thinner lines, or have a line taper as it stretches into space. Thus, we must attenuate the value we computed in step **2a**.
 
-Intuitively, we would scale the values down based on its distance from the camera; we can use the previously computed length to viewplane value. However, this is pure linear Z value, meaning that if it's re-mapped to 0-1, most of its values will lie on the upper range. Similar to how we must transform a Z buffer into a non-linear depth buffer, we must do the same here. Then we can attenuate it with a power factor, use map range to map a minimum value for the outline, and finally multiply it with the value from step **2a**. 
+Intuitively, we would scale the values down based on its distance from the camera; we can use the previously computed length to viewplane value. However, this is pure linear Z value, meaning that if it's re-mapped to 0-1, most of its values will lie on the upper range. Similar to how we must transform a Z buffer into a non-linear depth buffer, we must do the same here. Then we can attenuate it with a power factor, use map range to map a minimum value and maximum value for the outline, and finally multiply it with the value from step **2a**. 
 
 ![Attenuation and G Vector](/assets/geonode_outline/images/2c_attenuation_3.6.png)
 
