@@ -118,21 +118,14 @@ Because we've projected our normal vectors to be parallel to the near/far plane,
 <center><h5><i> Inside of the VectorProjection vector group </i></h5></center>
 
 ### 4. Final Steps {#step_4}
-**4a.** We may see weird artifacts when the reprojected vector is close to being parallel to the vector from the camera to the vertex, because the reprojected vector needs to be scaled to a large degree after step 2 to be parallel to the original normal vector. So we must attenuate these vectors. Luckly for us, where these vectors occur also happens to be there the inverted hull is not visible, so we can simply scale them down. 
-
-We can do so by:
-1. Use the dot product of the g Vector and original Normal vectors to determine which vectors we need to cull. The more parallel they are, 
-2. We do not care about direction, only parallel-ness, so we use the absolute value. This also makes the range of the values to be [0-1]
-3. We then invert the values, this makes it such that the closer a vector is to being parallel with the r vector, the closer it is to 0.
-4. Then use power and mix to attenuate, and finally scale our reprojected vector with it. 
+**4a.** We want to provide options for using and world space constant outlines and blending between that and screen space outlines, so we add the following nodes.
+![World Space Outline Option](/assets/geonode_outline/images/4_world_space_outline_3.6.png)
+**4b.** We make use of vertex weights to allow further user attenuation of the outlines. Also, the re-projection may cause some vectors to point inside of the mesh instead of out, so we perform a dot product check and invert the vectors. This still preserves the screen space size of our outlines.
+![Weight and inversion Check](/assets/geonode_outline/images/4_weight_inversion_check_3.6.png)
+**4c.** We may see weird artifacts when the reprojected vector is close to being parallel to the vector from the camera to the vertex, because the reprojected vector needs to be scaled to a large degree after step 2 to be parallel to the original normal vector. These artifacts will be noticable if they endup intersection another mesh, So we must attenuate these vectors. Luckly for us, where these vectors occur also happens to be there the inverted hull is not visible, so we can simply clamp its length with the following nodes. 
 
 ![Culling](/assets/geonode_outline/images/4_culling_3.6.png)
 <center><h5><i> Dot Product's input B is the g Vector, and B is the s Vector from 3 </i></h5></center>
-
-**4b.** We want to provide options for using and world space constant outlines and blending between that and screen space outlines, so we add the following nodes.
-![World Space Outline Option](/assets/geonode_outline/images/4_world_space_outline_3.6.png)
-**4c.** We make use of vertex weights to allow further user attenuation of the outlines. Also, the re-projection may cause some vectors to point inside of the mesh instead of out, so we perform a dot product check and invert the vectors. This still preserves the screen space size of our outlines.
-![Weight and inversion Check](/assets/geonode_outline/images/4_weight_inversion_check_3.6.png)
 **4d.** Extruding our Inverted Hull then just involves giving each vertex the offset that we calculated, flipping its normals, and setting an outline material.
 ![Done!](/assets/geonode_outline/images/4_finish.png)
 
