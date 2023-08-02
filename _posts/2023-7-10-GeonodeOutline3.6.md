@@ -64,7 +64,7 @@ With **Geometry Nodes**, rather than only being able to extrude the Inverted Hul
 <h5><i> Realtime Demo </i></h5>
 </center>
 ![Geonode Overview](/assets/geonode_outline/gifs/geonode_demo_gif.gif)
-<center><h5><i> The outline of every mesh can be controlled by changing the property of a single Geometry Node graph </i></h5></center>
+<center><h5><i> The outline of every mesh can be controlled by changing the property of a single Geometry Node graph (Note: the node group inputs here is an older version) </i></h5></center>
 
 ### The basic principle
 So the idea is to take our vertex normal vector, project it such that it is parallel to the near-plane/far-plane of the camera, then scale it by a factor such that it will be the length that we want it to be in screen space, and finally projecting it back to the original normal vector while preserving its screen space length. We then create the inverted hull mesh using these new vectors, rather than just the normal vectors in the traditional method.
@@ -118,14 +118,23 @@ Because we've projected our normal vectors to be parallel to the near/far plane,
 <center><h5><i> Inside of the VectorProjection vector group </i></h5></center>
 
 ### 4. Final Steps {#step_4}
-**4a.** We want to provide options for using and world space constant outlines and blending between that and screen space outlines, so we add the following nodes.
-![World Space Outline Option](/assets/geonode_outline/images/4_world_space_outline_3.6.png)
-**4b.** We make use of vertex weights to allow further user attenuation of the outlines. Also, the re-projection may cause some vectors to point inside of the mesh instead of out, so we perform a dot product check and invert the vectors. This still preserves the screen space size of our outlines.
-![Weight and inversion Check](/assets/geonode_outline/images/4_weight_inversion_check_3.6.png)
-**4c.** We may see weird artifacts when the reprojected vector is close to being parallel to the vector from the camera to the vertex, because the reprojected vector needs to be scaled to a large degree after step 2 to be parallel to the original normal vector. These artifacts will be noticable if they endup intersection another mesh, So we must attenuate these vectors. Luckly for us, where these vectors occur also happens to be there the inverted hull is not visible, so we can simply clamp its length with the following nodes. 
+**4a.** We may see weird artifacts when the reprojected vector is close to being parallel to the vector from the camera to the vertex, because the reprojected vector needs to be scaled to a large degree after step 2 to be parallel to the original normal vector. So we must attenuate these vectors. Luckly for us, where these vectors occur also happens to be there the inverted hull is not visible, so we can simply scale them down. 
+
+We can do so by:
+1. Use the dot product of the g Vector and original Normal vectors to determine which vectors we need to cull. The more parallel they are, 
+2. We do not care about direction, only parallel-ness, so we use the absolute value. This also makes the range of the values to be [0-1]
+3. We then invert the values, this makes it such that the closer a vector is to being parallel with the r vector, the closer it is to 0.
+4. Then use power to attenuate for non linear behavior
+5. Check if our vector from the previous step is greater than a given value, if false then change our attenuation value to 1 (do nothing). 
+6. Mix with culling factor and scale our vector from the previous step.
 
 ![Culling](/assets/geonode_outline/images/4_culling_3.6.png)
 <center><h5><i> Dot Product's input B is the g Vector, and B is the s Vector from 3 </i></h5></center>
+
+**4b.** We want to provide options for using and world space constant outlines and blending between that and screen space outlines, so we add the following nodes.
+![World Space Outline Option](/assets/geonode_outline/images/4_world_space_outline_3.6.png)
+**4c.** We make use of vertex weights to allow further user attenuation of the outlines. Also, the re-projection may cause some vectors to point inside of the mesh instead of out, so we perform a dot product check and invert the vectors. This still preserves the screen space size of our outlines.
+![Weight and inversion Check](/assets/geonode_outline/images/4_weight_inversion_check_3.6.png)
 **4d.** Extruding our Inverted Hull then just involves giving each vertex the offset that we calculated, flipping its normals, and setting an outline material.
 ![Done!](/assets/geonode_outline/images/4_finish.png)
 
