@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "[Blender 3.6] Geometry Node Screen-space Inverted Hull Outlines"
+title:  "[Blender 3.6] Geometry Node Screen-Space Inverted Hull Outlines"
 date:   2023-07-10 00:30:00 -0500
 categories: Tech_Art
 ---
