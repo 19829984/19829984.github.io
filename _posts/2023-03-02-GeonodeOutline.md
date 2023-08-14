@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Geometry Node Screen-space Invert Hull Outlines"
+title:  "Geometry Node Screen-Space Invert Hull Outlines"
 date:   2023-03-02 08:50:00 -0500
 categories: Tech_Art
 ---
