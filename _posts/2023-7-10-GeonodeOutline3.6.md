@@ -15,6 +15,7 @@ categories: Tech_Art
   - [Scale Projected Normal Vectors in Screen Space](#step_2)
   - [Re-Project Back to Original Normal Vectors](#step_3)
   - [Final Steps](#step_4)
+- [Download](#dl)
 
 
 ## Blender 3.6 Update {#blender_3.6}
@@ -146,3 +147,6 @@ We can do so by:
 And done! Now you have a geometry node group that takes a geometry and material, and outputs inverted hull outlines in screen space, with a variety of adjustment options, and can be readily linked to other files and use. 
 
 If you want to control the inverted hull of multiple mesh objects at once with this, nest it inside another layers of nodes, and use the top layer as the geometry node object for the modifiers of all desired objects.
+
+## Download {#dl}
+If you want a finished version of this project, you can grab it for free [Here](https://artech1.gumroad.com/l/xaqihk)
