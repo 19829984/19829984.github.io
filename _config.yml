@@ -18,14 +18,13 @@
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
 
-title: Bowen's Whitespace
-email: bowenwu741@gmail.com
+title: Artech's Whitespace
+email: artech4d@gmail.com
 description: >- # this means to ignore newlines until "baseurl:"
   I've been here for as long as I can remember.
-domain: "19829984.github.io"
+domain: "artech3d.art"
 baseurl: "" # the subpath of your site, e.g. /blog
-url: "https://19829984.github.io/" # the base hostname & protocol for your site, e.g. http://example.com
-github_username: "19829984"
+url: "https://artech3d.art/" # the base hostname & protocol for your site, e.g. http://example.com
 
 # Build settings
 theme: minima
