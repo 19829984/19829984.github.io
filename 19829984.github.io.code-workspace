@@ -1,0 +1,18 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"emmet.excludeLanguages": [],
+		"emmet.includeLanguages": {
+			"markdown": "html",
+			"md": "html"
+		},
+		"emmet.triggerExpansionOnTab": true,
+		// "[markdown]": {
+		// 	"editor.quickSuggestions": true
+		// }
+	}
+}
