@@ -248,7 +248,7 @@ else
 }
 ```
 ### 3. Rendering The Whiteboard SDF
-Finally, to render our SDF into a whiteboard, we write a surface shader as follows:
+Finally, to render our SDF into a whiteboard, we write a Unity surface shader as follows:
 ```glsl
 ...
 half _Glossiness;
