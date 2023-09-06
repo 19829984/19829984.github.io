@@ -23,6 +23,7 @@ categories: Tech_Art
   - [1. Rendering Polylines](#1-rendering-polylines)
   - [2. Blit to Whiteboard Render Texture](#2-blit-to-whiteboard-render-texture)
   - [3. Rendering The Whiteboard SDF](#3-rendering-the-whiteboard-sdf)
+- [Limitations and Future Works](#limitations-and-future-works)
 
 
 ## Preface
@@ -285,3 +286,21 @@ void surf (Input IN, inout SurfaceOutputStandard o)
     o.Alpha = 1;
 }
 ```
+
+In the end, our whiteboard texture will look something like this
+<p align="center">
+    <img src="/assets/vr_whiteboard/whiteboard_rt_example.png">
+    <h5 align="center"><i> Each tile corresponds to a whiteboard </i></h5>
+</p>
+
+And our whiteboards properly display their own tile
+<p align="center">
+    <img src="/assets/vr_whiteboard/whiteboard_example.png">
+</p>
+
+## Limitations and Future Works
+One limitation is that if a player joins later, then they will not see any things that were drawn on the whiteboard before they've joined. This is because none of the strokes are recorded, and we do not sync the texture upon a player joining. 
+
+We could solve this by either:
+1. Figuring out a way to sync the texture on join
+2. Store all or recent strokes somewhere and reconstruct them for the new player.
