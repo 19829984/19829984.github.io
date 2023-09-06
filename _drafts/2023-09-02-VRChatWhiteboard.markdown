@@ -95,6 +95,8 @@ For a prototype, I decided to only implement 8 of the 12 whiteboards using two `
 
 The stroke render texture is configured to only contain a single 8-bit unsigned channel without filtering, while the whiteboard texture is configured to contain 4 8-bit unsigned channels with bilinear filtering.
 
+All shaders in this section will have their full source code available at the bottom of the page. 
+
 ### 1. Rendering Polylines
 To render polylines into marker strokes, we'd need the SDF function of a polyline. There is no closed form function for a polyline SDF, so we must calculate a cylinder sdf for each two consecutive points then combine them to generate our polyline SDF. From Inigo's list of SDF functions, the function for a capsule/line between two points in 3D space is:
 ```glsl
@@ -148,11 +150,14 @@ fixed4 frag (v2f i) : SV_Target
 ```
 Finally, we render it with some UdonSharp calls
 ```csharp
-// _AspectRatio and is set during initialization of the script 
-whiteboardBlitMaterial.SetVectorArray("_Polyline_Pos", last_polyline);
-whiteboardBlitMaterial.SetFloat("_Polyline_Len", last_polyline_index);
-whiteboardBlitMaterial.SetVector("_ScaleOffset", scaleOffset);
-VRCGraphics.Blit(markerDrawRT, markerDrawRT, whiteboardBlitMaterial, whiteboardBlitMaterial.FindPass("Draw"));
+private void RenderPolyline(){
+    // _AspectRatio and is set during initialization of the script 
+    whiteboardBlitMaterial.SetVectorArray("_Polyline_Pos", last_polyline);
+    whiteboardBlitMaterial.SetFloat("_Polyline_Len", last_polyline_index);
+    whiteboardBlitMaterial.SetVector("_ScaleOffset", scaleOffset);
+    VRCGraphics.Blit(markerDrawRT, markerDrawRT, whiteboardBlitMaterial, whiteboardBlitMaterial.FindPass("Draw"));
+    ...
+}
 ```
 
 For organizational purposes, I will place this shader in a pass called `Draw` in a shader named `CustomWhiteboardBlit.shader`
@@ -238,14 +243,17 @@ I've placed these two shaders with the `Draw` pass inside `CustomWhiteboardBlit.
 
 Then in UdonSharp, we render to the whiteboard with the following lines of code:
 ```csharp
-whiteboardBlitMaterial.SetColor("_Channel", ConvertMarkerChannel((int)last_polyline[0][3]));
-if (current_polyline_is_erase)
-{
-    VRCGraphics.Blit(markerDrawRT, whiteboardRT, whiteboardBlitMaterial, whiteboardBlitMaterial.FindPass("Sub"));
-}
-else
-{
-    VRCGraphics.Blit(markerDrawRT, whiteboardRT, whiteboardBlitMaterial, whiteboardBlitMaterial.FindPass("Add"));
+private void RenderPolyline(){
+    ...
+    whiteboardBlitMaterial.SetColor("_Channel", ConvertMarkerChannel((int)last_polyline[0][3]));
+    if (current_polyline_is_erase)
+    {
+        VRCGraphics.Blit(markerDrawRT, whiteboardRT, whiteboardBlitMaterial, whiteboardBlitMaterial.FindPass("Sub"));
+    }
+    else
+    {
+        VRCGraphics.Blit(markerDrawRT, whiteboardRT, whiteboardBlitMaterial, whiteboardBlitMaterial.FindPass("Add"));
+    }
 }
 ```
 ### 3. Rendering The Whiteboard SDF
@@ -293,14 +301,75 @@ In the end, our whiteboard texture will look something like this
     <h5 align="center"><i> Each tile corresponds to a whiteboard </i></h5>
 </p>
 
-And our whiteboards properly display their own tile
+ 
 <p align="center">
     <img src="/assets/vr_whiteboard/whiteboard_example.png">
+    <h5 align="center"><i> Each whiteboard properly display their own tile </i></h5>
 </p>
+
+## Marker Whiteboard System
+Here I want to briefly go over how I've written the marker script and whiteboard scripts to interact with each other. I will include their full source code at the bottom of the page. 
+```csharp
+public class Marker : UdonSharpBehaviour
+{
+    Whiteboard GetWhiteboardFromRay(RaycastHit raycast_res);
+    public override void OnDrop();
+    private void StopDrawing();
+    private void GetNearestWhiteboardRaycastIndex(RaycastHit[] raycast_results, out int raycast_index, out bool valid);
+    public override void OnPickupUseDown();
+    public override void OnPickupUseUp();
+    void FixedUpdate();
+}
+```
+
+```csharp
+public class Whiteboard : UdonSharpBehaviour
+{
+    public override void OnPostSerialization(SerializationResult result);
+    public override void OnDeserialization();
+    public void SetWhiteboardOwner(VRCPlayerApi newOwner);
+    public void AddPolylinePoint(Vector2 point, float size, bool is_erase, int channel, bool continue_last_line);
+    public void EndLine(bool continue_last_line);
+    private void RecordPolyine();
+    private void ClearPolyline(bool continue_last_line);
+    private void RenderPolyline();
+}
+```
+### Marker Script
+In `Marker`'s `FixedUpdate`, when a player picks up a marker and tries to use it, we check the following things in order:
+1. Whether the pen has moved by a minimum distance since the last update
+2. Raycast from the pen for a short distance
+3. Check if the nearest hit object is valid, has a `Whiteboard` UdonSharpBehaviour script, and is within a certain distance
+
+If all three conditions are true, then we:
+1. Set the whiteboard object's owner to the marker object's owner
+2. Sample the UV of the raycast hit, and call the whiteboard's `AddPolylinePoint(...)` function. 
+
+If **either** condition `2` or `3` fails, then we end the line that we're drawing with `StopDrawing()`, if there is one. `StopDrawing()` calls the `Whiteboard` script's `Endline` function with `continue_last_line=false` to prevent a new line being connected to the previous one. 
+
+Finally, we record the position of the marker tip for the next update. 
+
+### Whiteboard Script
+In `AddPolylinePoint(...)`, we do the following:
+- **If** the current polyline has reached its maximum length, terminate it with `EndLine(...)` and pass in `continue_last_line`
+  - `Endline(...)` does the following:
+    1. Record the current polyline into a temp polyline
+    2. Clear the current polyline, insert the last point from the recorded polyline if `continue_last_line=true`
+    3. Set `renderingPolyline=true` and request Serialization of polyline data
+- **Else** add the new point into the current polyline
+  - If we're inserting into an empty polyline, then we insert the same point twice so that if that is the only point drawn, a circle will be correctly drawn with our rendering pipeline. 
+
+We only render the polyline with `RenderPolyLine()` if either:
+- In `OnPostSerialization` event we see that the serialization is successful and `renderingPolyline=true`
+  - This is triggered on the host client after serialization is requested
+- In `OnDeSerialization` event we see `renderingPolyline=true`
+  - This is triggered on all other players' clients after they've received the serialized polyline data. 
+
+There are many other details that I must gloss over, you can read them for yourself at the bottom of the page.
 
 ## Limitations and Future Works
 One limitation is that if a player joins later, then they will not see any things that were drawn on the whiteboard before they've joined. This is because none of the strokes are recorded, and we do not sync the texture upon a player joining. 
 
 We could solve this by either:
 1. Figuring out a way to sync the texture on join
-2. Store all or recent strokes somewhere and reconstruct them for the new player.
+2. Store all or recent strokes somewhere and reconstruct them for the new player upon initialization.
