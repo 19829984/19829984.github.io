@@ -36,7 +36,7 @@ It should be noted that this isn't the only nor best way to achieve realtime out
 ## **Simple Inverted Hull in Blender** {#simple_inverted_hull_blender}
 In Blender, the easiest way to achieve this is to use the *Solidify* modifier with flipped normals and a material that only renders the back-face. 
 <center>
-<img src="/assets/geonode_outline/images/simple_invert_hull_example.png" width="400"> <img src="/assets/geonode_outline/images/simple_invert_hull_modifier_example.png" width="250">
+<img src="/assets/geonode_outline/images/simple_invert_hull_example.jpg" width="400"> <img src="/assets/geonode_outline/images/simple_invert_hull_modifier_example.jpg" width="250">
 </center>
 <center><h5><i> The mesh has an outer shell, which is the Inverted Hull outline. Notice that we have <b>Material Offset</b> set to 1, meaning the solidified mesh will use the second material slot assigned to the mesh, which is a black emissive material that only renders its back-face. </i></h5></center>
   
@@ -47,7 +47,7 @@ However, this has **limitations**:
 - At extreme angles, world space outline thickness makes the closer part of the mesh appear to have a thicker outline than the rest of the mesh.
   - Though depending on art direction, this could be desirable.
 
-![Extreme Angle Example](/assets/geonode_outline/images/simple_extreme_example.png)
+![Extreme Angle Example](/assets/geonode_outline/images/simple_extreme_example.jpg)
 <center><h5><i> The hand's outline is significantly thicker than the objects behind it, and the outlines on the button are clipping as well </i></h5></center>
 
 ### So how do we do this?
@@ -58,7 +58,7 @@ Unfortunately in Blender, we **do not have access** to the vertex or geometry sh
 ## **Geometry Node Based Inverted Hull** {#geonode_inverted_hull}
 With **Geometry Nodes**, rather than only being able to extrude the Inverted Hull cage along its vertex normal, we can specify exactly how we want it to move. With some simple vector math, we can achieve a result that gets you a much more uniform Inverted Hull thickness within screen space. This means that the **outlines stays consistent regardless of your camera's rotation and location**; allowing you to set and forget then carry on with the rest of your animation. Though, having uniform outlines for everything can make your renders look monotonous and boring, so we will also add more controls to customize its behavior. Plus, we can organize the nodes such that every outline can be controlled from one (or arbitrary many) places.
 
-![Fixed Extreme Angle Example](/assets/geonode_outline/images/advanced_extreme_example_.png)
+![Fixed Extreme Angle Example](/assets/geonode_outline/images/advanced_extreme_example_.jpg)
 <center><h5><i> Now the entire model's outline is much more uniform, with the buttons looking much better too </i></h5></center>
 <center>
 <img src="/assets/geonode_outline/gifs/outline_demo_gif.gif" width="800">
@@ -84,13 +84,13 @@ From the camera's point of view, the last step doesn't look like the vectors hav
 
 ### 1. Project Normals to Camera Plane {#step_1}
 First we need to retrieve data about the active camera with the following node setup to obtain its world space location, XYZ euler rotation, as well as basis vectors.
-![Active Camera Data Node Setup](/assets/geonode_outline/images/1_active_camera_data_node.png)
+![Active Camera Data Node Setup](/assets/geonode_outline/images/1_active_camera_data_node.jpg)
 <center><h5><i> We make use of context properties obtain the active camera's world space location and rotation. </i></h5></center>
 
 With that node group ready to go, we can now take the normal vectors of our mesh and project them to be parallel to the near/far plane of the camera, by projecting the vectors to a plane that has the view vector as its normal, or the plane orthoginal to the view vector. 
 
 Since both our mesh normal and view vectors are unit vectors, their dot product is simply cos(Θ). Now imagine a triangle where our mesh normal vector is the hypotenus, and a vector parallel to the near/far plane (vector A) and a vector parallel to the view vector(vector B) are its two other sides, with vector A and B being perpendicular to each other. Vector B would have length equal to cos(Θ). So we multiply our view vector by cos(Θ), and subtract it from the mesh normal vector to obtain vector A, the projection of the mesh normal vector onto the plane orthogonal to the view vector. We then normalize this vector to apply scaling later. 
-![Normal Projection Geo Nodes](/assets/geonode_outline/images/1_normal_proj_overview_3.6.png)
+![Normal Projection Geo Nodes](/assets/geonode_outline/images/1_normal_proj_overview_3.6.jpg)
 <center><h5><i> Calculate Camera view vector from (0,0,-1); the default camera orientation, then project normals to camera plane. </i></h5></center>
 
 ### 2. Scale Projected Normal Vectors in Screen Space {#step_2}
@@ -98,24 +98,24 @@ Since both our mesh normal and view vectors are unit vectors, their dot product 
 
 First we calculate the orthogonal distance from our camera to a viewplane that has a vertex point lying on it. We can then use the camera's focal length to calculate how long and tall that view plane is in world space. With this and the scene's render resolution, we can then calculate the length we want to extrude our inverted hull at any vertex such that they appear to be the same size in screen space. 
 
-![Calculate World Space Distance Per Pixel](/assets/geonode_outline/images/2a_pixel_dist_geo_node_3.6.png)
+![Calculate World Space Distance Per Pixel](/assets/geonode_outline/images/2a_pixel_dist_geo_node_3.6.jpg)
 
 **2b.** To make the Outlines dynamically respond to changing camera parameters, we pass in the *focal length* and *dimensions* through **drivers** using context properties.
 
 <center>
-<img src="/assets/geonode_outline/images/focal_length_driver_3.6.png" height="300"> <img src="/assets/geonode_outline/images/resolution_driver_3.6.png" height="300"><img src="/assets/geonode_outline/images/driver_connection.png" height="300"></center>
+<img src="/assets/geonode_outline/images/focal_length_driver_3.6.jpg" height="300"> <img src="/assets/geonode_outline/images/resolution_driver_3.6.jpg" height="300"><img src="/assets/geonode_outline/images/driver_connection.jpg" height="300"></center>
 
 **2c.** What is mathematically correct isn't necessarily what we want. Often, you'd want objects far away to have thinner lines, or have a line taper as it stretches into space. Thus, we must attenuate the value we computed in step **2a**.
 
 Intuitively, we would scale the values down based on its distance from the camera; we can use the previously computed length to viewplane value. However, this is pure linear Z value, meaning that if it's re-mapped to 0-1, most of its values will lie on the upper range. Similar to how we must transform a Z buffer into a non-linear depth buffer, we must do the same here. Then we can attenuate it with a power factor, use map range to map a minimum value and maximum value for the outline, and finally multiply it with the value from step **2a**. 
 
-![Attenuation and G Vector](/assets/geonode_outline/images/2c_attenuation_3.6.png)
+![Attenuation and G Vector](/assets/geonode_outline/images/2c_attenuation_3.6.jpg)
 
 ### 3. Re-Project Back to Original Normal Vectors {#step_3}
 Because we've projected our normal vectors to be parallel to the near/far plane, when they are used to create the inverted hull, the hull may often clip the original mesh, causing artifacts. Therefore, we must reproject our vectors back to the normal vector, while preserving their screenspace size.
-![Re-projection](/assets/geonode_outline/images/3_reprojection_3.6.png)
+![Re-projection](/assets/geonode_outline/images/3_reprojection_3.6.jpg)
 <center><h5><i> Check out <a href="https://vixra.org/pdf/1712.0524v1.pdf">this PDF</a> for an explanation on projecting a vector onto a plane from any angle </i></h5></center>
-![Re-projection_2](/assets/geonode_outline/images/3_vector_projection_group.png)
+![Re-projection_2](/assets/geonode_outline/images/3_vector_projection_group.jpg)
 <center><h5><i> Inside of the VectorProjection vector group </i></h5></center>
 
 ### 4. Final Steps {#step_4}
@@ -129,18 +129,18 @@ We can do so by:
 5. Check if our vector from the previous step is greater than a given value, if false then change our attenuation value to 1 (do nothing). 
 6. Mix with culling factor and scale our vector from the previous step.
 
-![Culling](/assets/geonode_outline/images/4_culling_3.6.png)
+![Culling](/assets/geonode_outline/images/4_culling_3.6.jpg)
 <center><h5><i> Dot Product's input B is the g Vector, and B is the s Vector from 3 </i></h5></center>
 
 **4b.** We want to provide options for using and world space constant outlines and blending between that and screen space outlines, so we add the following nodes.
-![World Space Outline Option](/assets/geonode_outline/images/4_world_space_outline_3.6.png)
+![World Space Outline Option](/assets/geonode_outline/images/4_world_space_outline_3.6.jpg)
 **4c.** We make use of vertex weights to allow further user attenuation of the outlines. Also, the re-projection may cause some vectors to point inside of the mesh instead of out, so we perform a dot product check and invert the vectors. This still preserves the screen space size of our outlines.
-![Weight and inversion Check](/assets/geonode_outline/images/4_weight_inversion_check_3.6.png)
+![Weight and inversion Check](/assets/geonode_outline/images/4_weight_inversion_check_3.6.jpg)
 **4d.** Extruding our Inverted Hull then just involves giving each vertex the offset that we calculated, flipping its normals, and setting an outline material.
-![Done!](/assets/geonode_outline/images/4_finish.png)
+![Done!](/assets/geonode_outline/images/4_finish.jpg)
 
 **4e.** Now all you need to do is to grab the weight attribute and connect it to the input of our node group, and link up all other inputs to the inputs of the outermost group.
-![Overview](/assets/geonode_outline/images/4_finish_overview.png)
+![Overview](/assets/geonode_outline/images/4_finish_overview.jpg)
 <center><h5><i> 2 nodes in between to default the weights to 1 if the attribute does not exist </i></h5></center>
 
 ### Done!

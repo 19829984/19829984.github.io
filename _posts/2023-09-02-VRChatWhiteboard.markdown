@@ -41,7 +41,7 @@ I was replicating a room from my college for use in VRChat, and it has some whit
 VRChat provides sample prefabs that includes a pen for players to draw in 3D space. It's implemented by drawing ribbons along 3D points the pen samples. However, this is not a good fit for whiteboards primarily because the number of ribbons must be limited, since they are unique GameObjects and can easily clutter the scene and reduce performance. We don't want people's pen strokes to start disappearing from the whiteboards as they put down more marks. Further, to replicate the feel of drawing on a whiteboard, we want strokes to be erasable and merge together when overlapped. Therefore, we must go with a texture solution. 
 
 <p align="center">
-    <img src="/assets/vr_whiteboard/3d_pen_example.png">
+    <img src="/assets/vr_whiteboard/3d_pen_example.jpg">
     <h5 align="center"><i> Ribbons being drawn in 3D space</i></h5>
 </p>
 
@@ -78,7 +78,7 @@ From [VRChat documentation](https://creators.vrchat.com/worlds/udon/networking/n
 
 At first, the marker would directly draw onto the client's local render textures every frame while it's in contact. However, that wouldn't affect any other player's texture. So, I tried to simply sync the transforms of a marker as often as I can, hoping that each client's result would be close enough, but that wasn't the case at all. 
 <p align="center">
-    <img src="/assets/vr_whiteboard/shit-network-1.png" width="50%"><img src="/assets/vr_whiteboard/shit-network-2.png" width="50%">
+    <img src="/assets/vr_whiteboard/shit-network-1.jpg" width="50%"><img src="/assets/vr_whiteboard/shit-network-2.jpg" width="50%">
     <h5 align="center"><i>Two clients in the same world having wildly different results</i></h5>
 </p>
 
@@ -171,7 +171,7 @@ For organizational purposes, I will place this shader in a pass called `Draw` in
 \* Note that here we're not using the fourth element of our `float4` array. That's the color channel of the stroke, which will be used later in the whiteboard shader. However, we still pass in the `float4` array directly to avoid rebuilding a new `float3` array just to save a little bit of memory and compute time. 
 
 <p align="center">
-    <img src="/assets/vr_whiteboard/marker_rt_example.png">
+    <img src="/assets/vr_whiteboard/marker_rt_example.jpg">
     <h5 align="center"><i> Strokes being rendered onto each whiteboard tile</i></h5>
 </p>
 
@@ -303,13 +303,13 @@ void surf (Input IN, inout SurfaceOutputStandard o)
 
 In the end, our whiteboard texture will look something like this
 <p align="center">
-    <img src="/assets/vr_whiteboard/whiteboard_rt_example.png">
+    <img src="/assets/vr_whiteboard/whiteboard_rt_example.jpg">
     <h5 align="center"><i> Each tile corresponds to a whiteboard </i></h5>
 </p>
 
  
 <p align="center">
-    <img src="/assets/vr_whiteboard/whiteboard_example.png">
+    <img src="/assets/vr_whiteboard/whiteboard_example.jpg">
     <h5 align="center"><i> Each whiteboard properly display their own tile </i></h5>
 </p>
 
