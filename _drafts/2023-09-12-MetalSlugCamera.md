@@ -27,7 +27,7 @@ Something I’ve noticed that the threshold for scrolling varies between levels.
 > Given that the second level is a zombie level where most enemies do not have long ranged attacks, this design decision was probably made to force the player to be closer to the enemies as they come from the right side of the screen.
 
 ### First Iteration
-First I tried to check for the player’s screen space X coordinate and moving the camera such that they stay on the left side. This works, but the movement is jumpy and inconsistent using a constant scroll speed offset.
+For the first iteration, I have the level setup such that it is laid out along the X axis, and placed the camera looking at the level from the side. I tried to check for the player’s screen space X coordinate and moving the camera directly such that they stay on the left side. This works, but the movement is jumpy and inconsistent using a constant scroll speed offset.
 
 ![Untitled](/assets/metal_slug_cam/jittery_implementation.png)
 
@@ -42,22 +42,32 @@ For supporting both left and right scrolling, we make an Enum that has all 4 dir
 ![Untitled](/assets/metal_slug_cam/old_enums.png)
 
 ### Second Iteration
-Soon I realized that what I was writing wasn’t adaptable and scalable, so I worked my approach. 
+Soon I realized that what I was writing wasn’t adaptable and scalable, so I reworked my approach. 
 
+I built a blueprint pawn that contained the following components
+- Camera Path Spline
+  - Scene
+    - SpringArm
+      - Camera
+
+The idea is to define the path the camera would take with the root spline component, then use the Blueprint to program how the camera should move and track the player. 
+#### Scrolling by moving along the spline
 We will define 4 different thresholds for each side of the screen, each toggle-able, we can then make each type of camera movement by configuring these variables. For example, forward scrolling can be achieve by simply toggling the left threshold off, while keeping the others on so the player can move to the right with vertical tracking. We will worry about bounding the camera to a specific area later. 
 
-I made a struct that allows toggling of scrolling on each side of the screen as well as adjusting their individual thresholds. This way, I can dynamically toggle then quickly in the editor, as well as dynamically in other blueprints later on. 
+I made a struct that allows toggling of scrolling on each side of the screen as well as adjusting their individual thresholds. This way, I can dynamically toggle them quickly in the editor, as well as dynamically in other blueprints later on. 
 
 ![Untitled](/assets/metal_slug_cam/new_struct.png)
 
-The Blueprint looks like this 
+The following blueprint calculates the player's normalized screenspace position, checks it against the threshold we've defined in the `ScreenScrollThresholds` struct. If the player has passed the threshold, then the different between their position and threshold is multiplied with the scroll speed and added to a vector that will move the camera. 
 
 ![Untitled](/assets/metal_slug_cam/new_move.png)
 
-I’ve added some simple debug HUD elements to visualize the thresholds
+To visualize these thresholds and debug them, I’ve added some simple debug HUD elements to visualize the thresholds
 
-**TODO** fix this
-[16cb5bb902d9b74f8cd72ef17042a95f.mp4](Metal%20Slug%20Styled%20Camera%20movement%204ae22505b6d9498ab1e02c757f764ec1/16cb5bb902d9b74f8cd72ef17042a95f.mp4)
+<p align="center">
+    <img src="/assets/metal_slug_cam/threshold_demo.gif">
+    <h5 align="center"><i> The whitelines demark the threshold at which the camera will move</i></h5>
+</p>
 
 I then integrated it with moving the camera along a fixed path, as well as bounding the player within screen space. 
 
