@@ -28,7 +28,7 @@ Metal Slug is one of my favorite arcade game of all time (though I've only playe
 ## Metal Slug’s Camera System
 In Metal Slug (I'll abbreviate it as MS), most of the time the camera seems to be only moving towards the right as the player progress, but this is not the case. In certain areas, it allows the player to still move within a bound area that is larger than the camera’s play space. 
 
-I first tried some BluePrint solutions that would move the camera along a fixed spline track, but after some thinking and replaying MS3 I realized that this doesn’t really work, at least not on its own. Across Metal Slug, I've noticed that the camera commonly are in one of three states:
+I first tried some Blueprint solutions that would move the camera along a fixed spline track, but after some thinking and replaying MS3 I realized that this doesn’t really work, at least not on its own. Across Metal Slug, I've noticed that the camera commonly are in one of three states:
 1. **Forward Scrolling** - Player must move forward, and the camera will only move forward. Vertical tracking of the player still occurs. This needs to support “forward” being either left or right to allow for more interesting level design. 
 2. **Bounded** - The camera is bounded to a small area, or an area so small that no movement is possible. It will continuously track the player as they approach the screen’s threshold
 3. **Auto Scrolling** - The camera continuously move forward in the environment at a fixed speed, while the player either must keep up by foot, stand on some kind of moving vehicle, or is piloting a moving vehicle that is already moving forward. Forward can either be to the right or up. Auto Scrolling up will basically be a shmup (shoot'em up) at that point. 
@@ -56,7 +56,7 @@ For supporting both left and right scrolling, I made an Enum that has all 4 dire
 
 ### Second Iteration
 
-I built a blueprint pawn that contained the following components
+I built a Blueprint pawn that contained the following components
 - Camera Path Spline
   - Scene
     - SpringArm
@@ -74,11 +74,11 @@ I made a struct that allows toggling of scrolling on each side of the screen as 
 
 ![Untitled](/assets/metal_slug_cam/new_struct.png)
 
-The following blueprint calculates the player's normalized screen-space position, checks it against the threshold we've defined in the `ScreenScrollThresholds` struct. If the player has passed the threshold, then the different between their position and threshold is multiplied with the scroll speed and added to a vector that will move the camera. 
+The following Blueprint calculates the player's normalized screen-space position, checks it against the threshold we've defined in the `ScreenScrollThresholds` struct. If the player has passed the threshold, then the different between their position and threshold is multiplied with the scroll speed and added to a vector that will move the camera. 
 
 ![Untitled](/assets/metal_slug_cam/new_move.png)
 
-Then, we can use the direction that we calculated to move the camera along the path. I store a variable called `Last Distance` on the blueprint, then use the calculated direction to add to the stored distance, and use the `FInterp To` node to smoothly interpolate to the destination. 
+Then, we can use the direction that we calculated to move the camera along the path. I store a variable called `Last Distance` on the Blueprint, then use the calculated direction to add to the stored distance, and use the `FInterp To` node to smoothly interpolate to the destination. 
 
 #### Optimization
 The above node graph is pretty tangled and messy. That and the fact that it will be evaluated every tick means that re-writing it into C++ code would give us some performance back. So I rewrote the camera pawn into a C++ `AFantasyCamera` class to be inherited from, and implemented a few functions to replace parts of the node tree. 
@@ -162,7 +162,7 @@ To make managing the tag less tedious, I’ve modified `BP_CameraPawn`’s Const
 This is my first time building any kind of system inside Unreal, so there are a lot of room for improvements. 
 - We could take inspiration from [Insanely Twisted Shadow Planet](https://www.youtube.com/watch?v=aAKwZt3aXQM)(ITSP) and introduce a point of interest system for more dynamic camera movements. 
 - Tools to easily author and adjust which camera should transition to which camera, and the conditions under which they transition.
-- I didn't quite understand the underlying mechanics of the blueprint system, so there are definitely inefficient aspects about my implementation
+- I didn't quite understand the underlying mechanics of the Blueprint system, so there are definitely inefficient aspects about my implementation
   - For instance, there are places where I can use an impure function to cache my results, instead of having to reevaluate the same thing over and over
   - There are other places where I can rewrite the nodes as C++ code to make the graph more readable.
-- To bound the player and other objects inside the camera view we could have the camera output X and Z bounds (remember all entities are on Y=0), and have the entity use those values inside their own blueprints.
+- To bound the player and other objects inside the camera view we could have the camera output X and Z bounds (remember all entities are on Y=0), and have the entity use those values inside their own Blueprints.
