@@ -11,7 +11,7 @@ categories: Tech_Art
 </p>
 
 ## Preface
-Is Maya's MEL scripting language really meant for writing sophisticated algorithms? **No**, is the short answer. The lack of support of several things you'd find in Python makes the latter a much more attractive option for writing algorithms and high level code. Indeed, the typical approach is to use Python or PyMel to write your Maya scripts; MEL is mostly there for legacy reasons, but is good to know in understanding how Maya operates. 
+Is Maya's MEL scripting language really meant for writing sophisticated algorithms? **No**, is the short answer. The lack of support for several things you'd find in Python makes the latter a much more attractive option for writing algorithms and high level code. Indeed, the typical approach is to use Python or PyMel to write your Maya scripts; MEL is mostly there for legacy reasons, but is good to know in understanding how Maya operates. 
 
 ### MEL
 So what makes MEL a worse option than Python in most cases? Frankly, the language is just cumbersome to write, its interpreter is fairly dumb compared to Python, and it doesn't have a lot of features you'd find in modern languages, like arrays of arbitrary dimensions, or the ability to define your own data structures. 
