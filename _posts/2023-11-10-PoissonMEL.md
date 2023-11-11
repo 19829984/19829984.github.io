@@ -10,6 +10,15 @@ categories: Tech_Art
     <h5 align="center"><i> Visualization of a 2D Poisson Disk sampling distribution, courtesy of wikipedia</i></h5>
 </p>
 
+- [Preface](#preface)
+  - [MEL](#mel)
+- [Poisson Disc](#poisson-disc)
+  - [What it is](#what-it-is)
+- [Challenges](#challenges)
+- [Implementation and Reflection](#implementation-and-reflection)
+- [Source Code](#source-code)
+
+
 ## Preface
 Is Maya's MEL scripting language really meant for writing sophisticated algorithms? **No**, is the short answer. The lack of support for several things you'd find in Python makes the latter a much more attractive option for writing algorithms and high level code. Indeed, the typical approach is to use Python or PyMel to write your Maya scripts; MEL is mostly there for legacy reasons, but is good to know in understanding how Maya operates. 
 
@@ -61,3 +70,8 @@ As for what I've learned, well I've definitely gotten a taste of writing MEL now
 Since I'm trying to generate points on a 3D mesh, I couldn't follow the paper exactly, since there's the constraint that the points would have to lie on the mesh surface. So instead, I opted for a naive dart throwing algorithm to generate my samples. Computing geodesic distance was also not in the scope of what I intended, so I opted to just use Euclidean distance to get it to work.
 
 If I were to actually have to use what I wrote, I would definitely try to implement geodesic distance computation on the mesh for a sampling distribution that would be correct for any mesh. Of course, I would also write it in Python.
+
+## Source Code
+I've included my source code here. It's a bit messy and disorganized. `mesh_poisson` can be copy and pasted into the script editor, and ran with the object to instance and object to instance onto selected, in that order. `poisson` contains an implementation that more closely follows Bridson's paper, but only generates 2D points.
+
+[Source Code](/assets/mel_poisson/poisson_mel.zip)
