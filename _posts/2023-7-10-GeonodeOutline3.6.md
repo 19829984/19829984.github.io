@@ -149,4 +149,4 @@ And done! Now you have a geometry node group that takes a geometry and material,
 If you want to control the inverted hull of multiple mesh objects at once with this, nest it inside another layers of nodes, and use the top layer as the geometry node object for the modifiers of all desired objects.
 
 ## Download {#dl}
-If you want a finished version of this project, you can grab it for free [Here](https://artech1.gumroad.com/l/xaqihk)
+If you want a finished version of this project, you can grab it for free [Here](https://bonen1.gumroad.com/l/xaqihk)
